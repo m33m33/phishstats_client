@@ -1,10 +1,14 @@
-# phishstats
+# Overview: phishstats_client
 
-This is the nim-lang rewrite of my python script, to check https://phishstats.info API for domains, keywords, ASN...
+This app check https://phishstats.info API for domains, keywords, ASN...
 
-It keeps track of findings in a sqlite database and warn you only ONCE for each new discovery
 
-So you can crontab this script and get notified only for new security incidents
+It keeps track of findings in a sqlite database and warn you only ONCE for each new discovery, with an output like:
+
+`⚠️ [NEW] <keyword> in <...result from phistats.info...>`
+
+
+So you can crontab this app, and get notified only for new security incidents, data leaks...
 
 
 ## Usage
