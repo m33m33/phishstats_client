@@ -14,21 +14,44 @@ phishstats [full path to config file]
 
 ## Configuration file
 
-The configuration file contains your phiststats API requests, and keywords you want to hightlight in results
+The configuration is a JSON file, it contains your phiststats API requests, and keywords you want to hightlight in results
 ```
-#phishstats search patterns like (url,like,~YourDomainName~) separated by ,;,
-searches: (url,like,~your.domain.com~),;,(title,like,~domain.com~)
+{
+  // Phishstat's WS endpoint
+  "base_url": "https://phishstats.info:2096/api/phishing?_where=",
 
-#specific keywords to look for in results like specific@email.domain separated by ,;,
-keywords: support@domain.com,;,vip@domain.com
+  // search list collection
+  "searches": [
+    "(url,like,~private.mydomain.net~)",
+    "(title,like,~my-secondary-domain.com~)",
+    "(title,like,~mydomain~)~or(url,like,~mydomain~)",
+    "(ip,eq,172.16.1.2)",
+    "(asn,eq,as64512)"
+  ],
 
-#path to the database
-db_file: /tmp/phishstats.sqlite
+  // keyword list collection
+  "keywords": [
+    "vip@mydomain.net",
+    "192.168.0.254",
+    "a_magic_token"
+  ],
+
+  // the database file name with optional path prefix
+  "db_file": "phishstats.sqlite",
+
+  // timeout (s) for phishstats WS requests
+  "api_timeout": 60,
+
+  // debug will show some diagnostics at runtime, turn off in production
+  "debug": true
+}
 ```
 
 ## Misc
 
-Please do not harras or abuse phishstats network API.
+Please do not abuse phishstats network API.
+
+You are strongly advised to use this application (and phishstats services) to look for your very own datas only.
 
 <div>
 <small>Icons made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></small></div>
