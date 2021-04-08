@@ -19,5 +19,5 @@ build_bin:
         - nimble build
     artifacts:
       paths:
-        - phishstats_client
+        - bin/phishstats_client
 
