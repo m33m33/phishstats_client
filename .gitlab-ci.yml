@@ -1,4 +1,4 @@
-image: debian:testing
+image: nimlang/nim
 
 stages:
   - build
