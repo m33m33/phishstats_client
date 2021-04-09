@@ -1,4 +1,5 @@
 # Import libraries
+import os
 import json
 import httpclient
 import db_sqlite
@@ -69,17 +70,40 @@ proc lookup(keywords: JsonNode; json_data: JsonNode) =
 
 
 #
-# readConfig()
+# readConfig(file_name)
 #
 # read the config file
 #
-proc readConfig() =
-  var file = open("phishstats.config", fmRead)
-  let config = file.readAll()
-  file.close()
+proc readConfig(arg_file_name: string) =
+  var file_descriptor: File 
+  var file_name: string
+  var config: string
+  var jconfig: JsonNode
 
-  var jconfig = parseJson(config)
-  configuration = to(jconfig, Config)
+  # Open the configuration file
+  if arg_file_name=="":
+    #echo "Using default configuration file"
+    file_name="phishstats.config"
+  else:
+    file_name=arg_file_name
+  
+  #echo "Using configuration from file:" & file_name
+  try:
+    file_descriptor = open(file_name, fmRead)
+    config = file_descriptor.readAll()
+  except:
+    echo "Can't open or read configuration file (",file_name,")... Error detail: ", getCurrentExceptionMsg()
+    quit(QuitFailure)
+
+  file_descriptor.close()
+
+  # Parse configuration content
+  try:
+    jconfig = parseJson(config)
+    configuration = to(jconfig, Config)
+  except:
+    echo "Can't parse configuration file... Error detail: ", getCurrentExceptionMsg()
+    quit(QuitFailure)
 
   if configuration.debug:
     echo "📔 base_url:", configuration.base_url
@@ -109,9 +133,23 @@ proc finalize() =
 # Initialize the environment, networking, database...
 #
 proc init() =
-  readConfig()
-  db = open(configuration.db_file, "", "", "")
-  db.exec(sql"""CREATE TABLE IF NOT EXISTS phishstats (search text, phishing text)""")
+
+  # Do we have a path to the config file or resort to default ?
+  if paramCount() >= 1:
+    if paramStr(1) ==  "-h" or paramStr(1) == "--help":
+      echo "Usage: phishstats_client [config file]"
+      quit(QuitSuccess)
+
+    readConfig(paramStr(1))
+  else:
+    readConfig("")
+
+  try:
+    db = open(configuration.db_file, "", "", "")
+    db.exec(sql"""CREATE TABLE IF NOT EXISTS phishstats (search text, phishing text)""")
+  except:
+    dbError(db)
+  
   client = newHttpClient(timeout = configuration.api_timeout * 1000)
 #endproc
 
@@ -128,7 +166,13 @@ proc goPhishing() =
   for search in configuration.searches:
     if configuration.debug:
       echo "\n🎣 Phishing for " & search.getStr
-    phishstats_results_raw = client.getContent(configuration.base_url & search.getStr)
+
+    try:
+      phishstats_results_raw = client.getContent(configuration.base_url & search.getStr)
+    except:
+      echo "Error when requesting phishstats network API for search:" , search.getStr
+      continue
+
     phishstats_results_json = parseJson(phishstats_results_raw)
     lookup(configuration.keywords, phishstats_results_json)
 #endproc
